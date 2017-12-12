@@ -6,7 +6,7 @@ from requests import get
 from json import loads
 soup = BeautifulSoup(urlopen('https://www.marketwatch.com/investing/index/djia').read(),'html.parser')#Sticks the webpage into a dataframe
 closingtab = soup.find_all('td', class_ = 'table__cell u-semi')#Finds the table that contains previous days closing index and puts it into a list structure
-digest = md5((date.today().strftime("%Y-%m-%d") +"-" +closingtab[0].text.replace(',', '')).encode('utf-8')).hexdigest()#Creates the md5 digest from the top part of the comic
+digest = md5((date.today().strftime("%Y-%m-%d") +"-" +closingtab[0].text.replace(',', '')).encode('utf-8')).hexdigest()#creates md5 hash digest to modify lat/lon
 r = get('http://freegeoip.net/json')#response for geolocation as a json file
 j = loads(r.text)#load json as string
 lat = j['latitude']# extract lat from json
