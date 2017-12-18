@@ -1,5 +1,5 @@
 *.apikey
-
+.idea
 
 # Compiled source #
 ###################

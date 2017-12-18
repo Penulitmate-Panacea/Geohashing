@@ -2,7 +2,7 @@
 
 
 def api_stock():
-    """"Determine the user's location using an online service"""
+    """"Determine previous closing index of the Dow Jones Industrial Average"""
     from requests import get
     with open("key1.apikey") as key_file:
         keys = key_file.readlines()
@@ -41,7 +41,7 @@ def get_hash(closing):
     """Creates the hash from the users location and closing price of the Dow Jones Industrial Index"""
     from datetime import date
     from hashlib import md5
-    digest = md5((date.today().strftime("%Y-%m-%d") + "-" + str(closing)).encode('utf-8')).hexdigest()
+    digest = md5((date.today().strftime("%Y-%m-%d") + "-" + str(closing)).encode()).hexdigest()
     lat_add = int(digest[:16], 16) / 16 ** 16
     lon_add = int(digest[16:], 16) / 16 ** 16
     return lat_add, lon_add
@@ -62,6 +62,14 @@ def export(lat, lon, location):
 
 last_close = api_stock()
 start = get_location()
-hash_ = get_hash(last_close)
-goal = get_goal(start, hash_)
+hash_dec = get_hash(last_close)
+goal = get_goal(start, hash_dec)
 export(goal[0], goal[1], start[2])
+import folium
+folium_map = folium.Map(location=[start[0], start[1]],
+                        zoom_start=5,
+                        tiles="openstreetmap")
+
+marker = folium.CircleMarker(location=[goal[0], goal[1]])
+marker.add_to(folium_map)
+folium_map.save("C:/Users/rianf/Desktop/my_map.html")
