@@ -1,81 +1,67 @@
-def scrape():
-    from bs4 import BeautifulSoup
-    from urllib.request import urlopen
-    soup = BeautifulSoup(urlopen('http://www.marketwatch.com/investing/index/djia').read(),'html.parser')
-    #print(soup)
-    yesterclosetab = soup.find_all('td', class__='table__cell u-semi')
-    print("var:",yesterclosetab)
-    yesterclose = yesterclosetab[0].text.replace(',', '')  # Changes the table object into a standard string
-    return yesterclose
+# coding=utf-8
+
+
+def api_stock():
+    """"Determine the user's location using an online service"""
+    from requests import get
+    with open("key1.apikey") as key_file:
+        keys = key_file.readlines()
+        api_username = keys[0].replace('\n', '')
+    api_password = keys[1]
+    base_url = "https://api.intrinio.com"
+    request_url = base_url + "/historical_data"
+    query_params = {
+
+        'identifier': '$DJIA',
+        'item': 'level',
+        'page_size': '1'
+
+    }
+    response = get(request_url, params=query_params, auth=(api_username, api_password))
+    if response.status_code != 200:
+        print("API error code: ", response.status_code)
+    data = response.json()['data']
+    last_day = data[0]
+    return last_day['value']
 
 
 def get_location():
+    """"Determine the user's location using an online service"""
     from requests import get
     from json import loads
     from math import floor
-    r = get('http://freegeoip.net/json')  # response for geolocation as a json file
-    j = loads(r.text)  # load json as string
-    lat = floor(j['latitude'])  # extract lat from json
-    lon = floor(j['longitude'])  # extract lon from json
+    r = get('http://freegeoip.net/json')
+    j = loads(r.text)
+    lat = floor(j['latitude'])
+    lon = floor(j['longitude'])
     return lat, lon, j
 
 
 def get_hash(closing):
+    """Creates the hash from the users location and closing price of the Dow Jones Industrial Index"""
     from datetime import date
     from hashlib import md5
-    digest = md5((date.today().strftime("%Y-%m-%d") + "-" + closing).encode('utf-8')).hexdigest()
-    lat_add = int(digest[:16], 16) / 16 ** 16  # Converts the first  part of the hash to decimal
-    lon_add = int(digest[16:], 16) / 16 ** 16  # Converts the second part of the hash to decimal
+    digest = md5((date.today().strftime("%Y-%m-%d") + "-" + str(closing)).encode('utf-8')).hexdigest()
+    lat_add = int(digest[:16], 16) / 16 ** 16
+    lon_add = int(digest[16:], 16) / 16 ** 16
     return lat_add, lon_add
 
 
 def get_goal(home, hash_add):
-    lat = home[0] + hash_add[0]  # determines the goal by adding the decimal gained by the hash to the current location
-    lon = home[1] + hash_add[1]  # determines the goal by adding the decimal gained by the hash to the current location
+    """Determines the goal for the geohash"""
+    lat = home[0] + hash_add[0]
+    lon = home[1] + hash_add[1]
     return lat, lon
 
 
 def export(lat, lon, location):
+    """Shows the user the goal"""
     print("Your geohash for:", location['city'], ",", location['region_name'], ",", location['country_name'], "is:\n",
-          str(lat), ",", str(lon))  # Prints the resulting destination location
+          str(lat), ",", str(lon))
 
 
-def main():
-    closing = scrape()
-    home = get_location()
-    hash_ = get_hash(closing)
-    goal = get_goal(home, hash_)
-    export(goal[0], goal[1], home[2])
-
-
-def debug():
-    import argparse
-    import logging
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '-d', '--debug',
-        help="Print lots of debugging statements",
-        action="store_const", dest="loglevel", const=logging.DEBUG,
-        default=logging.WARNING,
-    )
-    parser.add_argument(
-        '-v', '--verbose',
-        help="Be verbose",
-        action="store_const", dest="loglevel", const=logging.INFO,
-    )
-    args = parser.parse_args()
-    logging.basicConfig(level=args.loglevel)
-
-def codecfix():
-    import sys
-    import codecs
-    if sys.stdout.encoding != 'cp850':
-      sys.stdout = codecs.getwriter('cp850')(sys.stdout.buffer, 'strict')
-    if sys.stderr.encoding != 'cp850':
-      sys.stderr = codecs.getwriter('cp850')(sys.stderr.buffer, 'strict')
-
-
-debug()
-codecfix()
-main()
+last_close = api_stock()
+start = get_location()
+hash_ = get_hash(last_close)
+goal = get_goal(start, hash_)
+export(goal[0], goal[1], start[2])
