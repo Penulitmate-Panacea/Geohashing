@@ -1,4 +1,5 @@
 # coding=utf-8
+"""temporary function definition file, will eventually be different files for better separation of concerns"""
 
 
 def api_stock():
@@ -60,16 +61,35 @@ def export(lat, lon, location):
           str(lat), ",", str(lon))
 
 
+def export_map(home, result):
+    """Saves the starting location and resulting geohash in a html file"""
+    from datetime import date
+    from folium import Map, Marker, Icon
+    try:
+        result_map = Map(location=[home[0], home[1]],  tiles="Stamen Toner")
+        Marker(location=[home[2]['latitude'], home[2]['longitude']], popup='Starting Location',
+               icon=Icon(color='green')) \
+            .add_to(result_map)
+        Marker(location=[result[0], result[1]], popup='Geohash Location', icon=Icon(color='red')).add_to(result_map)
+        path = ".\Saved\geohash_" + str(date.today().strftime("%Y-%m-%d")) + ".html"
+        result_map.save(path)
+    except FileNotFoundError:
+        from os import mkdir
+        from datetime import date
+        from folium import Map, Marker, Icon
+        mkdir(".\Saved")
+        result_map = Map(location=[home[0], home[1]], tiles="Stamen Toner")
+        Marker(location=[home[2]['latitude'], home[2]['longitude']], popup='Starting Location',
+               icon=Icon(color='green')) \
+            .add_to(result_map)
+        Marker(location=[result[0], result[1]], popup='Geohash Location', icon=Icon(color='red')).add_to(result_map)
+        path = ".\Saved\geohash_" + str(date.today().strftime("%Y-%m-%d")) + ".html"
+        result_map.save(path)
+
+
 last_close = api_stock()
 start = get_location()
 hash_dec = get_hash(last_close)
 goal = get_goal(start, hash_dec)
 export(goal[0], goal[1], start[2])
-import folium
-folium_map = folium.Map(location=[start[0], start[1]],
-                        zoom_start=5,
-                        tiles="openstreetmap")
-
-marker = folium.CircleMarker(location=[goal[0], goal[1]])
-marker.add_to(folium_map)
-folium_map.save("C:/Users/rianf/Desktop/my_map.html")
+export_map(start, goal)
