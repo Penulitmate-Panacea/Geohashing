@@ -1,6 +1,5 @@
 # coding=utf-8
-"""temporary function definition file, will eventually be different files for better separation of concerns"""
-
+"""Handles the creation of each part required for the geohash, as well as the creation of the geohash"""
 
 
 def create_hash(closing):
@@ -21,13 +20,3 @@ def create_goal(home, hash_add):
     lat = round(lat_full, 5)
     lon = round(lon_full, 5)
     return lat, lon
-
-
-
-
-
-# TODO 30W fix
-# TODO 0001-0930 fix
-# TODO allow for historical dates
-# TODO confusion matrix testing
-# TODO GUI
